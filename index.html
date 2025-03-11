@@ -1,0 +1,1038 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>준랩 | Spark-TTS: LLM 기반 단일 스트림 분리형 음성 토큰 TTS 모델</title>
+    <!-- Recharts 라이브러리 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react/17.0.2/umd/react.production.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/17.0.2/umd/react-dom.production.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prop-types/15.7.2/prop-types.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/recharts/2.1.9/Recharts.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+        }
+        
+        body {
+            background-color: #f5f5f5;
+            padding: 1rem;
+        }
+        
+        .max-w-6xl {
+            max-width: 72rem;
+            margin: 0 auto;
+        }
+        
+        .flex {
+            display: flex;
+        }
+        
+        .flex-col {
+            flex-direction: column;
+        }
+        
+        .p-4 {
+            padding: 1rem;
+        }
+        
+        .bg-gray-50 {
+            background-color: #fafafa;
+        }
+        
+        .rounded-lg {
+            border-radius: 0.5rem;
+        }
+        
+        .shadow {
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+        
+        .bg-gradient-to-r {
+            background-image: linear-gradient(to right, var(--tw-gradient-stops));
+        }
+        
+        .from-blue-600 {
+            --tw-gradient-stops: #2563eb, var(--tw-gradient-to, rgba(37, 99, 235, 0));
+        }
+        
+        .to-indigo-700 {
+            --tw-gradient-to: #4338ca;
+        }
+        
+        .text-white {
+            color: #ffffff;
+        }
+        
+        .p-6 {
+            padding: 1.5rem;
+        }
+        
+        .rounded-t-lg {
+            border-top-left-radius: 0.5rem;
+            border-top-right-radius: 0.5rem;
+        }
+        
+        .text-3xl {
+            font-size: 1.875rem;
+        }
+        
+        .font-bold {
+            font-weight: 700;
+        }
+        
+        .mb-2 {
+            margin-bottom: 0.5rem;
+        }
+        
+        .text-lg {
+            font-size: 1.125rem;
+        }
+        
+        .opacity-90 {
+            opacity: 0.9;
+        }
+        
+        .mt-4 {
+            margin-top: 1rem;
+        }
+        
+        .items-center {
+            align-items: center;
+        }
+        
+        .bg-green-500 {
+            background-color: #10b981;
+        }
+        
+        .text-sm {
+            font-size: 0.875rem;
+        }
+        
+        .px-3 {
+            padding-left: 0.75rem;
+            padding-right: 0.75rem;
+        }
+        
+        .py-1 {
+            padding-top: 0.25rem;
+            padding-bottom: 0.25rem;
+        }
+        
+        .rounded-full {
+            border-radius: 9999px;
+        }
+        
+        .mr-3 {
+            margin-right: 0.75rem;
+        }
+        
+        .mt-6 {
+            margin-top: 1.5rem;
+        }
+        
+        .justify-between {
+            justify-content: space-between;
+        }
+        
+        .cursor-pointer {
+            cursor: pointer;
+        }
+        
+        .p-2 {
+            padding: 0.5rem;
+        }
+        
+        .bg-white {
+            background-color: #ffffff;
+        }
+        
+        .shadow-sm {
+            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+        }
+        
+        .mr-2 {
+            margin-right: 0.5rem;
+        }
+        
+        .h-5 {
+            height: 1.25rem;
+        }
+        
+        .w-5 {
+            width: 1.25rem;
+        }
+        
+        .text-blue-600 {
+            color: #2563eb;
+        }
+        
+        .text-xl {
+            font-size: 1.25rem;
+        }
+        
+        .font-semibold {
+            font-weight: 600;
+        }
+        
+        .mt-2 {
+            margin-top: 0.5rem;
+        }
+        
+        .card {
+            border-radius: 0.5rem;
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+            background-color: #ffffff;
+            overflow: hidden;
+        }
+        
+        .card-content {
+            padding: 1.5rem;
+        }
+        
+        .mb-3 {
+            margin-bottom: 0.75rem;
+        }
+        
+        .text-purple-600 {
+            color: #9333ea;
+        }
+        
+        .text-lg {
+            font-size: 1.125rem;
+        }
+        
+        .font-medium {
+            font-weight: 500;
+        }
+        
+        .text-red-600 {
+            color: #dc2626;
+        }
+        
+        .tabs {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .tabs-list {
+            display: flex;
+            border-bottom: 1px solid #e2e8f0;
+            margin-bottom: 1rem;
+        }
+        
+        .tab-trigger {
+            padding: 0.5rem 1rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: #64748b;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+        }
+        
+        .tab-trigger.active {
+            color: #2563eb;
+            border-bottom: 2px solid #2563eb;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .mb-4 {
+            margin-bottom: 1rem;
+        }
+        
+        .h-80 {
+            height: 20rem;
+        }
+        
+        .w-full {
+            width: 100%;
+        }
+        
+        .mt-3 {
+            margin-top: 0.75rem;
+        }
+        
+        .text-gray-600 {
+            color: #4b5563;
+        }
+        
+        .bg-blue-50 {
+            background-color: #eff6ff;
+        }
+        
+        .p-4 {
+            padding: 1rem;
+        }
+        
+        .list-disc {
+            list-style-type: disc;
+            padding-left: 1.5rem;
+        }
+        
+        .pl-5 {
+            padding-left: 1.25rem;
+        }
+        
+        .text-green-600 {
+            color: #059669;
+        }
+        
+        .grid {
+            display: grid;
+        }
+        
+        .grid-cols-2 {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+        
+        .gap-4 {
+            gap: 1rem;
+        }
+        
+        .bg-yellow-50 {
+            background-color: #fffbeb;
+        }
+        
+        .inline-block {
+            display: inline-block;
+        }
+        
+        .w-3 {
+            width: 0.75rem;
+        }
+        
+        .h-3 {
+            height: 0.75rem;
+        }
+        
+        .bg-yellow-500 {
+            background-color: #f59e0b;
+        }
+        
+        .mt-2 {
+            margin-top: 0.5rem;
+        }
+        
+        .bg-green-50 {
+            background-color: #ecfdf5;
+        }
+        
+        .bg-green-500 {
+            background-color: #10b981;
+        }
+        
+        .mt-6 {
+            margin-top: 1.5rem;
+        }
+        
+        .text-teal-600 {
+            color: #0d9488;
+        }
+        
+        .text-indigo-600 {
+            color: #4f46e5;
+        }
+        
+        .mt-8 {
+            margin-top: 2rem;
+        }
+        
+        .bg-gray-100 {
+            background-color: #f3f4f6;
+        }
+        
+        .text-center {
+            text-align: center;
+        }
+        
+        .mt-1 {
+            margin-top: 0.25rem;
+        }
+        
+        .chart-container {
+            width: 100%;
+            height: 100%;
+            position: relative;
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        /* 추가된 스타일 */
+        .video-container {
+            width: 100%;
+            border-radius: 0.5rem;
+            overflow: hidden;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+        
+        .responsive-video {
+            width: 100%;
+            height: auto;
+            max-height: 500px;
+            background-color: #000;
+        }
+        
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem 1rem;
+            background-color: #fff;
+            border-radius: 0.5rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+        
+        .join-community {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        
+        .join-text {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #4b5563;
+            line-height: 1.25;
+        }
+        
+        .highlight {
+            color: #4f46e5;
+            font-weight: 700;
+            display: block;
+        }
+        
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.05);
+            }
+            100% {
+                transform: scale(1);
+            }
+        }
+        
+        .date-badge {
+            display: inline-flex;
+            align-items: center;
+            background-color: #f3f4f6;
+            padding: 0.35rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: #4b5563;
+        }
+        
+        .date-icon {
+            margin-right: 0.5rem;
+        }
+        
+        .subtitle {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #4b5563;
+            margin-top: 0.25rem;
+            letter-spacing: -0.025em;
+        }
+    </style>
+</head>
+<body>
+    <div class="flex flex-col max-w-6xl mx-auto p-4 bg-gray-50 rounded-lg shadow">
+        <!-- 상단 커뮤니티 링크 -->
+        <div class="header-top">
+            <div class="join-community">
+                <a href="https://open.kakao.com/o/gl7JSkSg" target="_blank" class="pulse">
+                    <img src="https://github.com/joonlab/audio-share/blob/main/kakao-openchat.png?raw=true" alt="Kakao Open Chat" style="height:50px;">
+                </a>
+                <div class="join-text">
+                    <span class="highlight">AI 최신 소식이 궁금하신가요?</span>
+                    JoonLab의 오픈채팅방에 참여하세요!
+                </div>
+            </div>
+            
+            <div class="date-badge">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="date-icon">
+                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                    <line x1="16" y1="2" x2="16" y2="6"></line>
+                    <line x1="8" y1="2" x2="8" y2="6"></line>
+                    <line x1="3" y1="10" x2="21" y2="10"></line>
+                </svg>
+                2025/3/9(일)
+            </div>
+        </div>
+
+        <!-- 헤더 섹션 -->
+        <div class="bg-gradient-to-r from-blue-600 to-indigo-700 text-white p-6 rounded-t-lg">
+            <h1 class="text-3xl font-bold mb-2">Spark-TTS: An Efficient LLM-Based Text-to-Speech Model</h1>
+            <p class="subtitle"><strong style="color: #ffd700; font-size: 1.4rem;">단일 스트림 분리형 음성 토큰을 활용한 효율적인 LLM 기반 TTS 모델</strong></p>
+        </div>
+        
+        <!-- 비디오 섹션 (헤더 아래로 이동) -->
+        <div class="video-container mt-4">
+            <video class="responsive-video" controls>
+                <source src="https://huggingface.co/j00n98/file-share/resolve/main/spark-tts-efficient-llm-based-tts.mp4" type="video/mp4">
+                브라우저가 비디오 태그를 지원하지 않습니다.
+            </video>
+        </div>
+
+        <!-- 소개 섹션 -->
+        <div class="mt-6">
+            <div class="flex justify-between items-center cursor-pointer p-2 bg-white rounded-lg shadow-sm" id="intro-toggle">
+                <div class="flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2 h-5 w-5 text-blue-600">
+                        <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
+                        <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
+                    </svg>
+                    <h2 class="text-xl font-semibold">1. 논문 소개</h2>
+                </div>
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" id="intro-chevron">
+                    <path d="m18 15-6-6-6 6"></path>
+                </svg>
+            </div>
+            
+            <div class="card mt-2" id="intro-content">
+                <div class="card-content pt-4">
+                    <div class="flex flex-col md:flex-row gap-6 mb-6">
+                        <div class="w-full md:w-1/2">
+                            <p class="mb-3">Spark-TTS는 단일 스트림 분리형 음성 토큰을 활용한 효율적인 LLM 기반 텍스트 음성 변환(TTS) 모델입니다. BiCodec이라는 혁신적인 토큰화 시스템을 통해 제로샷 음성 복제와 속성 제어 기능을 모두 제공합니다.</p>
+                            <p class="mb-3">최근 대규모 언어 모델(LLM)의 발전으로 텍스트-음성 변환(TTS) 분야에서 상당한 진전이 이루어졌으나, 기존 코덱 기반 TTS 아키텍처는 복잡성이 높고 텍스트 LLM 프레임워크와 크게 다릅니다.</p>
+                            <p class="mb-3">Spark-TTS는 BiCodec이라는 새로운 토큰화 프레임워크를 통해 시맨틱 토큰의 효율성을 유지하면서도 음색 관련 속성에 대한 세밀한 제어를 가능하게 합니다.</p>
+                        </div>
+                        <div class="w-full md:w-1/2">
+                            <img src="/api/placeholder/760/310" alt="Spark-TTS의 개념도" class="rounded-lg shadow-md w-full h-auto" style="max-height: 310px; object-fit: contain;">
+                            <p class="text-sm text-center text-gray-600 mt-2">Figure 1: Spark-TTS를 통한 제로샷 음성 복제와 다양한 속성 제어 기능</p>
+                        </div>
+                    </div>
+                    <p class="mb-3">또한, 연구의 재현성을 위해 VoxBox라는 엄격하게 큐레이션된 100,000시간 분량의 음성 데이터셋을 제공합니다.</p>
+                    <div class="bg-blue-50 p-4 rounded-lg mt-4">
+                        <h4 class="font-medium mb-2">주요 특징:</h4>
+                        <ul class="list-disc pl-5">
+                            <li>낮은 비트레이트 시맨틱 토큰과 고정 길이 글로벌 토큰을 결합한 하이브리드 토큰 스트림 생성</li>
+                            <li>Qwen2.5 LLM과 Chain-of-Thought(CoT) 생성 접근 방식을 결합하여 성별, 말하기 스타일과 같은 조대한 제어와 피치 값, 말하기 속도와 같은 세밀한 조정을 모두 가능하게 함</li>
+                            <li>포괄적인 속성 주석이 포함된 VoxBox 데이터셋 소개로 제어 가능한 TTS 연구 촉진</li>
+                            <li>단일 코덱 LLM을 통해 제로샷 음성 복제와 속성 기반 음성 생성 모두 지원</li>
+                            <li>광범위한 실험을 통해 최신 제로샷 음성 복제 성능 달성 및 참조 기반 합성의 한계를 뛰어넘는 맞춤형 음성 생성 실현</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 모델 데이터 및 접근 방식 섹션 -->
+        <div class="mt-4">
+            <div class="flex justify-between items-center cursor-pointer p-2 bg-white rounded-lg shadow-sm" id="approach-toggle">
+                <div class="flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9333ea" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2 h-5 w-5 text-purple-600">
+                        <path d="M9 3h6v11h3l-6 7-6-7h3V3z"></path>
+                    </svg>
+                    <h2 class="text-xl font-semibold">2. BiCodec 구조</h2>
+                </div>
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" id="approach-chevron">
+                    <path d="m6 9 6 6 6-6"></path>
+                </svg>
+            </div>
+            
+            <div class="card mt-2 hidden" id="approach-content">
+                <div class="card-content pt-4">
+                    <h3 class="text-lg font-medium mb-2">BiCodec 개요</h3>
+                    <p class="mb-3">BiCodec은 시맨틱 토큰의 압축성과 의미적 관련성을 유지하면서, LM 내에서 음향 속성 제어를 가능하게 하는 새로운 토큰화 프레임워크입니다.</p>
+                    <p class="mb-3">입력 오디오를 두 가지 유형으로 이산화합니다: (i) 초당 50개 토큰(TPS) 속도의 시맨틱 토큰으로 언어적 내용을 캡처하고, (ii) 고정 길이 글로벌 토큰으로 화자 속성 및 기타 글로벌 음성 특성을 인코딩합니다.</p>
+                    
+                    <div class="w-full my-6">
+                        <img src="/api/placeholder/740/450" alt="BiCodec 아키텍처" class="rounded-lg shadow-md w-full h-auto" style="max-height: 450px; object-fit: contain;">
+                        <p class="text-sm text-center text-gray-600 mt-2">Figure 2: BiCodec 아키텍처. 글로벌 토크나이저는 Mel 스펙트로그램을 처리하여 고정 길이의 글로벌 토큰을 생성하고, 시맨틱 토크나이저는 wav2vec 2.0의 특징을 채택하여 초당 50개의 시맨틱 토큰을 생성합니다. 디코더는 생성된 토큰에서 파형을 재구성합니다.</p>
+                    </div>
+                    
+                    <h3 class="text-lg font-medium mt-4 mb-2">모델 구조</h3>
+                    <p class="mb-3">BiCodec은 표준 VQVAE 인코더-디코더 프레임워크를 따르며, 여기에 글로벌 토크나이저가 추가되어 있습니다. 디코더는 이산 토큰들을 다시 오디오로 복원합니다.</p>
+                    <p class="mb-3">입력 오디오 신호 x에 대해 BiCodec은 다음과 같이 작동합니다:</p>
+                    
+                    <div class="bg-gray-100 p-4 rounded-md text-center mb-4">
+                        <p>z = E_s(F(x)), g = E_g(Mel(x))</p>
+                        <p>g_f = CrossAttention(g, h)</p>
+                        <p>z_q = Q_s(z), g_q = Q_g(g_f)</p>
+                        <p>x̂ = G(z_q, A_g(g_q))</p>
+                    </div>
+                    
+                    <p class="mb-3">여기서 E_s(·)는 시맨틱 토크나이저의 인코더, F(·)는 사전 훈련된 wav2vec 2.0, E_g(·)는 글로벌 토크나이저의 인코더, Mel(·)은 x에서 멜 스펙트로그램을 추출합니다.</p>
+                    
+                    <h3 class="text-lg font-medium mt-4 mb-2">인코더 및 디코더</h3>
+                    <p class="mb-3">시맨틱 토크나이저의 인코더 E_s와 디코더 G는 ConvNeXt 블록으로 구축된 완전 컨볼루션 신경망입니다. 시맨틱 정보를 효과적으로 캡처하기 위해 wav2vec 2.0(XLSR-53)의 11번째, 14번째, 16번째 레이어에서 특징을 선택하여 평균을 내어 시맨틱 특징을 얻습니다.</p>
+                    <p class="mb-3">글로벌 토크나이저의 인코더 E_g는 Wespeaker의 구현을 따르는 ECAPA-TDNN 아키텍처를 사용합니다. 인코딩 후 글로벌 토크나이저는 학습 가능한 쿼리 집합과 교차 어텐션 메커니즘을 사용하여 고정 길이 시퀀스 표현 g_f를 추출합니다.</p>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                        <div class="bg-blue-50 p-4 rounded-lg">
+                            <h4 class="font-medium mb-2">양자화 방법</h4>
+                            <p>시맨틱 토크나이저는 단일 코드북 벡터 양자화를 사용합니다. DAC에서 영감을 받아 양자화 전에 저차원 잠재 변수 공간으로 인코더 출력을 투영하는 팩터화된 코드를 사용합니다.</p>
+                        </div>
+                        <div class="bg-blue-50 p-4 rounded-lg">
+                            <h4 class="font-medium mb-2">FSQ 적용</h4>
+                            <p>글로벌 토크나이저는 시간 독립적인 글로벌 정보를 표현하기 위한 이산 토큰 집합이 필요하므로, VQ와 관련된 훈련 붕괴 위험을 완화하기 위해 FSQ(Finite Scalar Quantization)를 사용합니다.</p>
+                        </div>
+                    </div>
+                    
+                    <h3 class="text-lg font-medium mt-4 mb-2">학습 목적 함수</h3>
+                    <p class="mb-3">BiCodec은 생성적 적대 네트워크(GAN) 방법론을 사용해 재구성 손실을 최소화하면서 VQ 코드북을 최적화하는 end-to-end 학습을 수행합니다.</p>
+                    <p class="mb-3">다중 스케일 멜 스펙트로그램에 L1 손실을 사용하여 주파수 도메인 재구성 손실을 계산합니다. 파형 판별과 주파수 도메인 판별을 위해 다중 주기 판별기와 다중 밴드 다중 스케일 STFT 판별기를 사용합니다.</p>
+                    <p class="mb-3">VQ 코드북 학습은 코드북 손실과 커밋먼트 손실을 모두 포함합니다. 시맨틱 관련성을 더욱 보장하기 위해 양자화 후 wav2vec 2.0 재구성 손실을 적용합니다.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 성능 평가 섹션 -->
+        <div class="mt-4">
+            <div class="flex justify-between items-center cursor-pointer p-2 bg-white rounded-lg shadow-sm" id="performance-toggle">
+                <div class="flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2 h-5 w-5 text-red-600">
+                        <path d="M3 3v18h18"></path><path d="M18 17V9"></path><path d="M13 17V5"></path><path d="M8 17v-3"></path>
+                    </svg>
+                    <h2 class="text-xl font-semibold">3. Spark-TTS 언어 모델링</h2>
+                </div>
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" id="performance-chevron">
+                    <path d="m6 9 6 6 6-6"></path>
+                </svg>
+            </div>
+            
+            <div class="card mt-2 hidden" id="performance-content">
+                <div class="card-content pt-4">
+                    <div class="tabs">
+                        <div class="tabs-list">
+                            <div class="tab-trigger active" data-tab="overview">모델 개요</div>
+                            <div class="tab-trigger" data-tab="tokenizer">토크나이저</div>
+                            <div class="tab-trigger" data-tab="training">학습 목표</div>
+                            <div class="tab-trigger" data-tab="inference">추론 방법</div>
+                        </div>
+                        
+                        <div class="tab-content active" id="overview">
+                            <h3 class="text-lg font-medium mb-3">Spark-TTS 모델 개요</h3>
+                            <p class="mb-4">Spark-TTS 음성 언어 모델은 일반적인 텍스트 언어 모델과 통합된 디코더 전용 트랜스포머 아키텍처를 채택합니다.</p>
+                            
+                            <div class="w-full my-6">
+                                <img src="/api/placeholder/740/450" alt="Spark-TTS 언어 모델" class="rounded-lg shadow-md w-full h-auto" style="max-height: 450px; object-fit: contain;">
+                                <p class="text-sm text-center text-gray-600 mt-2">Figure 3: Spark-TTS 음성 언어 모델. 추론 중 입력에 성별, 피치 레벨, 속도 레벨을 나타내는 속성 토큰이 포함되면, 모델은 참조 오디오 없이도 CoT 방식으로 해당 세밀한 속성 토큰, 글로벌 토큰, 시맨틱 토큰을 예측할 수 있습니다. 그렇지 않은 경우, 제로샷 TTS를 위해 참조 오디오에서 글로벌 토큰을 추출할 수 있습니다.</p>
+                            </div>
+                            
+                            <div class="bg-blue-50 p-4 rounded-lg mt-3">
+                                <h4 class="font-medium mb-2">주요 특징:</h4>
+                                <ul class="list-disc pl-5">
+                                    <li>사전 훈련된 텍스트 LLM인 Qwen2.5-0.5B를 음성 언어 모델의 백본으로 사용</li>
+                                    <li>CosyVoice2와 달리 음향 특징을 생성하기 위한 플로우 매칭이 필요하지 않음</li>
+                                    <li>BiCodec 디코더가 LM의 출력을 직접 처리하여 최종 오디오 생성, 텍스트 LLM 기반 음성 생성 파이프라인을 크게 단순화</li>
+                                    <li>제로샷 TTS 외에도 성별, 피치 레벨, 속도 레벨과 같은 다양한 속성 레이블을 사용한 음성 생성 지원</li>
+                                </ul>
+                            </div>
+                            
+                            <p class="mt-3">추론 중에 성별, 피치 레벨, 속도 레벨에 대한 속성 레이블이 제공되면, 언어 모델은 chain-of-thought(CoT) 방식으로 세부 피치 값, 속도 값, 글로벌 토큰, 시맨틱 토큰을 예측할 수 있습니다. 속성 레이블이 제공되지 않으면 참조 오디오에서 글로벌 토큰을 추출하여 제로샷 TTS를 가능하게 합니다.</p>
+                        </div>
+                        
+                        <div class="tab-content" id="tokenizer">
+                            <h3 class="text-lg font-medium mb-3">토크나이저 구성</h3>
+                            <p class="mb-3">Spark-TTS는 텍스트 처리와 음성 표현을 위한 여러 토크나이저를 결합합니다.</p>
+                            
+                            <div class="space-y-4 mt-4">
+                                <div class="p-4 border rounded-md">
+                                    <div class="font-semibold mb-2">텍스트 토크나이저</div>
+                                    <div class="text-gray-700">텍스트 LLM과 유사하게 Spark-TTS는 원시 텍스트를 처리하기 위해 바이트 페어 인코딩(BPE) 기반 토크나이저를 사용합니다. 여기서는 여러 언어를 지원하는 Qwen2.5 토크나이저를 채택합니다.</div>
+                                </div>
+                                <div class="p-4 border rounded-md">
+                                    <div class="font-semibold mb-2">속성 토크나이저</div>
+                                    <div class="text-gray-700">음성 속성에 기반한 음성 생성을 가능하게 하기 위해 Spark-TTS는 두 가지 수준의 속성 정보를 인코딩합니다:<br>
+                                    - 조대한 수준: 성별, 피치(5개 이산 레벨로 분류), 속도(5개 이산 레벨로 분류)와 같은 상위 수준 음성 특성을 나타내는 속성 레이블<br>
+                                    - 세밀한 수준: 피치와 속도에 대한 정밀한 제어를 가능하게 하는 속성 값(토큰화 중에 가장 가까운 정수로 반올림됨)</div>
+                                </div>
+                                <div class="p-4 border rounded-md">
+                                    <div class="font-semibold mb-2">음성 토크나이저</div>
+                                    <div class="text-gray-700">음성 토크나이저는 글로벌 토크나이저와 시맨틱 토크나이저로 구성됩니다. 글로벌 및 시맨틱 토큰을 모두 사용하여 BiCodec 디코더는 파형 신호를 재구성합니다.</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="tab-content" id="training">
+                            <h3 class="text-lg font-medium mb-3">학습 목표</h3>
+                            <p class="mb-4">디코더 전용 언어 모델은 토큰 예측의 음의 로그 가능도를 최소화하도록 훈련됩니다.</p>
+                            
+                            <div class="bg-blue-50 p-4 rounded-lg mt-3">
+                                <h4 class="font-medium mb-2">제로샷 TTS를 위한 최적화:</h4>
+                                <div class="bg-gray-100 p-4 rounded-md text-center mb-4">
+                                    <p>L_zst = -∑(t=1 to T_o) log P(o_t | T, G, o_{<t})</p>
+                                </div>
+                                <p>여기서 T는 토큰화된 텍스트 프롬프트, G는 글로벌 음성 토큰 프롬프트, o_t는 t 시점의 출력 토큰, T_o는 출력 토큰의 총 수입니다.</p>
+                            </div>
+                            
+                            <div class="bg-blue-50 p-4 rounded-lg mt-4">
+                                <h4 class="font-medium mb-2">속성 제어를 위한 최적화:</h4>
+                                <div class="bg-gray-100 p-4 rounded-md text-center mb-4">
+                                    <p>L_attr = -∑(t=1 to T_o) log P(o_t | T, A, o_{<t})</p>
+                                </div>
+                                <p>여기서 A는 성별, 피치 레벨, 속도 레벨과 같은 속성 레이블의 벡터를 나타냅니다.</p>
+                            </div>
+                            
+                            <p class="mt-3">최종 훈련 목표는 두 가지 목표의 가중 조합입니다:</p>
+                            <div class="bg-gray-100 p-4 rounded-md text-center mb-4">
+                                <p>L = λ_zst * L_zst + λ_attr * L_attr</p>
+                            </div>
+                            <p>가중치 파라미터 λ_zst와 λ_attr은 각각 제로샷 TTS와 속성 제어의 상대적 중요성을 제어합니다.</p>
+                        </div>
+                        
+                        <div class="tab-content" id="inference">
+                            <h3 class="text-lg font-medium mb-3">추론 방법</h3>
+                            <p class="mb-3">Spark-TTS는 제로샷 TTS와 음성 생성 모두를 위한 다양한 추론 전략을 제공합니다.</p>
+                            
+                            <div class="space-y-4 mt-4">
+                                <div class="p-4 border rounded-md">
+                                    <div class="font-semibold mb-2">제로샷 TTS</div>
+                                    <div class="text-gray-700">Spark-TTS는 제로샷 TTS를 위한 두 가지 추론 전략을 제공합니다:
+                                        <ul class="list-disc pl-5 mt-2">
+                                            <li>합성될 텍스트와 참조 오디오에서 글로벌 토큰을 프롬프트로 사용하여 음성 생성</li>
+                                            <li>프롬프트의 접두사로 참조 오디오의 트랜스크립트와 시맨틱 토큰을 모두 통합</li>
+                                        </ul>
+                                        이 중에서 두 번째 접근 방식이 더 높은 화자 유사성을 달성합니다.
+                                    </div>
+                                </div>
+                                <div class="p-4 border rounded-md">
+                                    <div class="font-semibold mb-2">제어 가능한 음성 생성</div>
+                                    <div class="text-gray-700">제어 가능한 TTS에는 두 가지 수준의 제어가 포함됩니다:
+                                        <ul class="list-disc pl-5 mt-2">
+                                            <li>조대한 수준 제어: 프롬프트는 합성될 텍스트와 속성 레이블로 구성됩니다. 이 과정에서는 먼저 세부 속성 값을 예측한 다음 CoT 방식으로 글로벌 토큰과 시맨틱 토큰을 생성합니다.</li>
+                                            <li>세밀한 수준 제어: 프롬프트에는 합성될 텍스트, 속성 레벨, 정확한 속성 값이 포함됩니다.</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 메모리 분석 섹션 -->
+        <div class="mt-4">
+            <div class="flex justify-between items-center cursor-pointer p-2 bg-white rounded-lg shadow-sm" id="generation-toggle">
+                <div class="flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2 h-5 w-5 text-green-600">
+                        <path d="M17.5 19H9a7 7 0 1 1 0-14h11"></path>
+                        <path d="m21 8-4-4v3h-8a3 3 0 0 0 0 6h8v3l4-4"></path>
+                    </svg>
+                    <h2 class="text-xl font-semibold">4. 실험 결과</h2>
+                </div>
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" id="generation-chevron">
+                    <path d="m6 9 6 6 6-6"></path>
+                </svg>
+            </div>
+            
+            <div class="card mt-2 hidden" id="generation-content">
+                <div class="card-content pt-4">
+                    <h3 class="text-lg font-medium mb-3">BiCodec 재구성 성능</h3>
+                    <p class="mb-4">다양한 코덱 모델과 비교한 BiCodec의 음성 재구성 성능을 평가합니다.</p>
+                    
+                    <div class="w-full mb-6">
+                        <img src="/api/placeholder/740/300" alt="BiCodec 성능 비교 테이블" class="rounded-lg shadow-md w-full h-auto" style="max-height: 300px; object-fit: contain;">
+                        <p class="text-sm text-center text-gray-600 mt-2">Table 1: LibriSpeech test-clean 데이터셋에서 다양한 코덱 모델의 음성 재구성 성능 비교</p>
+                    </div>
+                    
+                    <div class="flex flex-col md:flex-row gap-4 mb-6">
+                        <div class="w-full">
+                            <div class="bg-blue-50 p-4 rounded-lg">
+                                <h4 class="font-medium mb-2">주요 발견:</h4>
+                                <ul class="list-disc pl-5">
+                                    <li>BiCodec은 50 TPS(초당 토큰 수)에서 0.65kbps 비트 레이트로 작동하면서 1kbps 미만 범위에서 다른 코덱을 능가하는 새로운 최고 수준의 재구성 품질을 달성</li>
+                                    <li>8192 크기의 코드북과 초당 50개 토큰으로 높은 품질의 음성 재구성 실현</li>
+                                    <li>글로벌 토큰 길이를 늘리면 재구성 품질이 지속적으로 향상되어 32의 길이에서 기준치에 근접</li>
+                                    <li>학습 가능한 쿼리와 FSQ를 통합한 제안된 양자화 방법은 Ren 등이 도입한 GVQ 기반 방법보다 상당한 성능 향상 보여줌</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <h3 class="text-lg font-medium mb-3">Spark-TTS의 제어 기능</h3>
+                    <p class="mb-3">Spark-TTS의 속성 제어 능력을 평가하기 위해 성별, 피치, 속도 제어에 대한 실험을 수행했습니다.</p>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 my-6">
+                        <div class="w-full">
+                            <img src="/api/placeholder/350/350" alt="피치 제어 혼동 행렬" class="rounded-lg shadow-md w-full h-auto" style="max-height: 350px; object-fit: contain;">
+                            <p class="text-sm text-center text-gray-600 mt-2">Figure 4: 조대한 수준 피치 제어의 혼동 행렬</p>
+                        </div>
+                        <div class="w-full">
+                            <img src="/api/placeholder/350/350" alt="속도 제어 혼동 행렬" class="rounded-lg shadow-md w-full h-auto" style="max-height: 350px; object-fit: contain;">
+                            <p class="text-sm text-center text-gray-600 mt-2">Figure 4: 조대한 수준 속도 제어의 혼동 행렬</p>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-blue-50 p-4 rounded-lg mt-4">
+                        <h4 class="font-medium mb-2">성별 제어 결과:</h4>
+                        <ul class="list-disc pl-5">
+                            <li>VoxInstruct와 Parler-TTS를 포함한 텍스트 프롬프트 기반 제어 가능한 TTS 모델과 비교</li>
+                            <li>Spark-TTS는 성별 제어에서 99.77%의 정확도를 달성하여 다른 제어 가능한 TTS 시스템보다 크게 앞서 속성 기반 음성 생성의 강력한 능력을 입증</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="w-full my-6">
+                        <img src="/api/placeholder/740/350" alt="세밀한 속성 제어 결과" class="rounded-lg shadow-md w-full h-auto" style="max-height: 350px; object-fit: contain;">
+                        <p class="text-sm text-center text-gray-600 mt-2">Figure 5: 세밀한 피치 및 속도 제어 결과. 피치 제어의 경우 각 생성된 값에는 중국어 샘플 1개와 영어 샘플 1개가 포함됩니다. 속도 제어의 경우 각 생성된 값에는 남성 샘플 10개와 여성 샘플 10개가 포함됩니다.</p>
+                    </div>
+                    
+                    <div class="bg-blue-50 p-4 rounded-lg mt-4">
+                        <h4 class="font-medium mb-2">피치 및 속도 제어 결과:</h4>
+                        <ul class="list-disc pl-5">
+                            <li>조대한 수준 및 세밀한 수준 모두에서 피치와 속도 제어의 효과 검증</li>
+                            <li>조대한 레이블을 기반으로 한 혼동 행렬 분석 결과, Spark-TTS가 지정된 속성 레이블과 정확히 일치하는 음성을 생성함을 확인</li>
+                            <li>세밀한 피치와 속도 제어 성능 테스트에서도 지정된 값에 매우 가까운 결과를 일관되게 생성</li>
+                            <li>이 결과는 Spark-TTS가 조대한 레이블과 세밀한 값 모두에서 정밀한 제어를 제공함을 보여줌</li>
+                        </ul>
+                    </div>
+                    
+                    <h3 class="text-lg font-medium mt-4 mb-3">제로샷 TTS 성능</h3>
+                    <p class="mb-3">Seed-TTS-eval에서 Spark-TTS의 제로샷 TTS 능력을 평가하고 기존 제로샷 TTS 모델과 비교했습니다.</p>
+                    
+                    <div class="w-full my-6">
+                        <img src="/api/placeholder/740/300" alt="제로샷 TTS 성능 비교" class="rounded-lg shadow-md w-full h-auto" style="max-height: 300px; object-fit: contain;">
+                        <p class="text-sm text-center text-gray-600 mt-2">Table 4: Seed 테스트 세트(중국어를 위한 test-zh 및 영어를 위한 test-en)에서 Spark-TTS와 최근 TTS 모델의 결과 비교</p>
+                    </div>
+                    
+                    <div class="bg-blue-50 p-4 rounded-lg mt-4">
+                        <h4 class="font-medium mb-2">주요 발견:</h4>
+                        <ul class="list-disc pl-5">
+                            <li>음성 명료도 측면에서 Spark-TTS는 중국어 CER에서 비공개 모델인 Seed-TTS에 이어 두 번째로 높은 성능을 보이고, 영어 WER에서는 F5-TTS에 이어 두 번째로 높은 성능 달성</li>
+                            <li>이러한 높은 명료도는 부분적으로 BiCodec과 VoxBox 데이터셋 트랜스크립트의 높은 품질에 기인</li>
+                            <li>화자 유사성 측면에서는 다단계 또는 NAR 기반 방법보다 상대적으로 약하지만, 단일 단계 모델인 Llasa보다 크게 앞섬</li>
+                            <li>특히 Spark-TTS는 0.5B 모델 매개변수와 100k 시간의 훈련 데이터만으로 8B 매개변수와 250k 시간 데이터로 훈련된 Llasa를 능가</li>
+                        </ul>
+                    </div>
+                    
+                    <p class="mt-3">또한 CosyVoice2를 따라 LibriSpeech test-clean 세트에서 생성된 음성의 품질을 평가했습니다. Spark-TTS는 원본보다 훨씬 높은 품질의 오디오를 생성하고 다단계 모델링을 사용하는 최신 오픈 소스 TTS 모델인 CosyVoice2보다 우수한 성능을 보여 음성 품질 측면에서 Spark-TTS의 강력한 성능을 입증했습니다.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 주요 장점 섹션 -->
+        <div class="mt-4">
+            <div class="flex justify-between items-center cursor-pointer p-2 bg-white rounded-lg shadow-sm" id="advantages-toggle">
+                <div class="flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0d9488" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2 h-5 w-5 text-teal-600">
+                        <path d="m7 11 2-2-2-2"></path>
+                        <path d="M11 13h4"></path>
+                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                    </svg>
+                    <h2 class="text-xl font-semibold">5. VoxBox 데이터셋</h2>
+                </div>
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" id="advantages-chevron">
+                    <path d="m6 9 6 6 6-6"></path>
+                </svg>
+            </div>
+            
+            <div class="card mt-2 hidden" id="advantages-content">
+                <div class="card-content pt-4">
+                    <p class="mb-3">제어 가능한 음성 합성 연구를 촉진하기 위해, 연구팀은 VoxBox라는 세심하게 큐레이션된 100,000시간 규모의 데이터셋을 소개합니다. 이 데이터셋은 포괄적인 속성 주석과 함께 고품질 음성 데이터를 제공합니다.</p>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                        <div class="p-4 bg-blue-50 rounded-lg">
+                            <div class="flex items-center mb-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#4f46e5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2">
+                                    <path d="m9 12 2 2 4-4"></path>
+                                    <path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20z"></path>
+                                </svg>
+                                <h3 class="font-medium">피치 및 속도 분류 기준</h3>
+                            </div>
+                            <p>인구 내 자연 발화 속도 분포를 정확하게 반영하기 위해 5번째, 20번째, 80번째, 95번째 백분위수를 사용하여 다양한 범주로 음성 속도를 분할합니다. 피치 분류에서는 인간의 기본 주파수 범위 내에서 높은 주파수에 대한 인간의 감도를 고려하여 5번째, 20번째, 70번째, 90번째 백분위수를 분할 경계로 사용합니다.</p>
+                        </div>
+                        
+                        <div class="p-4 bg-blue-50 rounded-lg">
+                            <div class="flex items-center mb-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#4f46e5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2">
+                                    <path d="m9 12 2 2 4-4"></path>
+                                    <path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20z"></path>
+                                </svg>
+                                <h3 class="font-medium">성별 예측기 훈련 데이터</h3>
+                            </div>
+                            <p>성별 분류를 위해 WavLM-large 모델을 미세 조정하고, 명시적인 성별 레이블이 포함된 VCTK, AISHELL-3, MLS-English, MAGICDATA, CommonVoice 등의 데이터셋을 사용합니다.</p>
+                        </div>
+                        
+                        <div class="p-4 bg-blue-50 rounded-lg">
+                            <div class="flex items-center mb-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#4f46e5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2">
+                                    <path d="m9 12 2 2 4-4"></path>
+                                    <path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20z"></path>
+                                </svg>
+                                <h3 class="font-medium">추가 주석</h3>
+                            </div>
+                            <p>VoxBox를 더 넓은 범위의 시나리오에 적용할 수 있도록, 각 샘플에 대해 성별과 감정 외에도 연령과 같은 추가 정보도 주석으로 달았습니다. 성별 주석과 유사하게, AISHELL-3, VCTK, MAGICDATA, CommonVoice, HQ-Conversations 기반으로 WavLM-large 모델을 미세 조정하여 5개의 연령대를 예측합니다: 아동, 십대, 청년, 중년, 노년.</p>
+                        </div>
+                        
+                        <div class="p-4 bg-blue-50 rounded-lg">
+                            <div class="flex items-center mb-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#4f46e5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2">
+                                    <path d="m9 12 2 2 4-4"></path>
+                                    <path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20z"></path>
+                                </svg>
+                                <h3 class="font-medium">감정 태그</h3>
+                            </div>
+                            <p>원본 메타데이터에 감정 레이블이 없는 데이터셋의 경우, 다양한 모델에서 소싱한 여러 감정 레이블을 관련 샘플에 할당합니다. 구체적으로 Emtion2vec, SenseVoiceSmall로 예측한 감정 레이블과 텍스트 입력으로 Qwen2.5-72B-Instruct가 예측한 감정 레이블을 제공합니다.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="w-full my-6">
+                        <img src="/api/placeholder/740/400" alt="VoxBox 데이터 분포" class="rounded-lg shadow-md w-full h-auto" style="max-height: 400px; object-fit: contain;">
+                        <p class="text-sm text-center text-gray-600 mt-2">Figure 7: VoxBox 데이터셋의 분포. 말하기 속도, 지속 시간, 피치의 분포를 보여줍니다.</p>
+                    </div>
+                    
+                    <div class="w-full my-6">
+                        <img src="/api/placeholder/740/200" alt="VoxBox 성별 및 연령 분포" class="rounded-lg shadow-md w-full h-auto" style="max-height: 200px; object-fit: contain;">
+                        <p class="text-sm text-center text-gray-600 mt-2">Figure 8: VoxBox의 성별 및 연령 분포.</p>
+                    </div>
+                    
+                    <h3 class="text-lg font-medium mb-3">데이터 통계</h3>
+                    <p class="mb-3">VoxBox 데이터셋은 약 47,700,000개의 발화로 구성되어 있으며, 총 102,500시간 분량의 오디오 데이터를 포함합니다.</p>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="p-4 bg-gray-100 rounded-lg">
+                            <h4 class="font-medium mb-2">중국어 데이터:</h4>
+                            <ul class="list-disc pl-5 space-y-1">
+                                <li>발화 수: 약 25,373,406개</li>
+                                <li>총 시간: 약 47,627시간</li>
+                                <li>남성 화자: 약 30,002시간</li>
+                                <li>여성 화자: 약 17,624시간</li>
+                                <li>주요 소스: Emilia-CN, WenetSpeech4TTS, MAGICDATA 등</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="p-4 bg-gray-100 rounded-lg">
+                            <h4 class="font-medium mb-2">영어 데이터:</h4>
+                            <ul class="list-disc pl-5 space-y-1">
+                                <li>발화 수: 약 22,332,806개</li>
+                                <li>총 시간: 약 54,873시간</li>
+                                <li>남성 화자: 약 33,290시간</li>
+                                <li>여성 화자: 약 21,582시간</li>
+                                <li>주요 소스: EmiliaEN, MLS-English, Gigaspeech 등</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <p class="mt-4">이 데이터셋은 속성 제어 음성 합성을 위한 연구 커뮤니티에 귀중한 자원을 제공합니다. 음성 속도, 피치, 성별 및 감정에 대한 포괄적인 주석을 통해 VoxBox는 제어 가능한 TTS 모델의 개발과 평가를 위한 강력한 기반을 제공합니다.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 결론 섹션 -->
+        <div class="mt-4">
+            <div class="flex justify-between items-center cursor-pointer p-2 bg-white rounded-lg shadow-sm" id="conclusion-toggle">
+                <div class="flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#4f46e5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2 h-5 w-5 text-indigo-600">
+                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                        <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                    </svg>
+                    <h2 class="text-xl font-semibold">6. 결론 및 한계점</h2>
+                </div>
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" id="conclusion-chevron">
+                    <path d="m6 9 6 6 6-6"></path>
+                </svg>
+            </div>
+            
+            <div class="card mt-2 hidden" id="conclusion-content">
+                <div class="card-content pt-4">
+                    <p class="mb-3">본 논문에서는 BiCodec을 소개했습니다. 이는 시맨틱 토큰의 장점인 높은 압축 효율성과 높은 명료성을 유지하면서도, LM 내에서 음색 관련 속성을 제어하지 못하는 전통적인 시맨틱 토큰의 한계를 글로벌 토큰을 통해 해결합니다.</p>
+                    <p class="mb-3">BiCodec은 50 TPS에서 0.65kbps의 비트 레이트로 작동하여 1kbps 미만 범위에서 다른 코덱들을 능가하는 새로운 최고 수준의 재구성 품질을 달성했습니다.</p>
+                    <p class="mb-3">BiCodec을 기반으로 텍스트 언어 모델 Qwen2.5를 통합한 Spark-TTS를 개발했습니다. Spark-TTS는 지정된 속성에 기반한 음성 생성을 가능하게 하고 제로샷 합성도 지원합니다.</p>
+                    <p class="mb-3">우리가 아는 한, 이 모델은 피치와 말하기 속도 모두에 대해 세밀한 제어를 제공하면서 동시에 제로샷 TTS를 지원하는 최초의 TTS 모델입니다.</p>
+                    
+                    <div class="bg-blue-50 p-4 rounded-lg mt-4">
+                        <h4 class="font-medium mb-2">연구의 한계:</h4>
+                        <ul class="list-disc pl-5">
+                            <li>Llasa와 유사하게 단일 코드북과 텍스트 언어 모델에 의존하는 Spark-TTS는 다단계 또는 NAR 방법에 비해 제로샷 TTS에서 상대적으로 낮은 화자 유사성 지표를 보입니다.</li>
+                            <li>이는 추론 중에 AR 언어 모델이 도입하는 더 큰 화자 변동성 때문일 수 있습니다.</li>
+                            <li>현재 Spark-TTS는 글로벌 토큰과 시맨틱 토큰 사이에 추가적인 분리 제약을 부과하지 않습니다.</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="bg-blue-50 p-4 rounded-lg mt-4">
+                        <h4 class="font-medium mb-2">향후 연구 방향:</h4>
+                        <ul class="list-disc pl-5">
+                            <li>시맨틱 토큰 입력에 포먼트나 피치에 대한 섭동을 도입하여 음색에 대한 글로벌 토큰 제어를 강화하는 방법 탐색</li>
+                            <li>이러한 접근 방식은 음색 정보의 더 나은 분리를 촉진하여 BiCodec 디코더가 음색에 대한 절대적인 제어를 발휘할 수 있게 함</li>
+                            <li>이를 통해 AR 모델이 도입하는 무작위성을 줄이고 제로샷 합성에서 화자 유사성을 개선하는 것을 목표로 함</li>
+                        </ul>
+                    </div>
+                    
+                    <p class="mt-4">결론적으로, Spark-TTS와 BiCodec은 음성 합성 분야에 중요한 진전을 가져왔으며, 단일 코덱 LLM을 통해 제로샷 TTS와 포괄적인 속성 제어를 모두 실현했습니다. VoxBox 데이터셋은 이 분야의 미래 연구를 위한 견고한 기반을 제공하여 음성 합성의 제어 가능성과 품질을 더욱 향상시킬 것으로 기대됩니다.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 섹션 토글 기능
+        const sections = [
+            { toggle: 'intro-toggle', content: 'intro-content', chevron: 'intro-chevron', isExpanded: true },
+            { toggle: 'approach-toggle', content: 'approach-content', chevron: 'approach-chevron', isExpanded: false },
+            { toggle: 'performance-toggle', content: 'performance-content', chevron: 'performance-chevron', isExpanded: false },
+            { toggle: 'generation-toggle', content: 'generation-content', chevron: 'generation-chevron', isExpanded: false },
+            { toggle: 'advantages-toggle', content: 'advantages-content', chevron: 'advantages-chevron', isExpanded: false },
+            { toggle: 'conclusion-toggle', content: 'conclusion-content', chevron: 'conclusion-chevron', isExpanded: false }
+        ];
+
+        sections.forEach(section => {
+            const toggleElement = document.getElementById(section.toggle);
+            const contentElement = document.getElementById(section.content);
+            const chevronElement = document.getElementById(section.chevron);
+            
+            // 초기 상태 설정
+            if (section.isExpanded) {
+                contentElement.classList.remove('hidden');
+                chevronElement.innerHTML = '<path d="m18 15-6-6-6 6"></path>';
+            } else {
+                contentElement.classList.add('hidden');
+                chevronElement.innerHTML = '<path d="m6 9 6 6 6-6"></path>';
+            }
+            
+            toggleElement.addEventListener('click', () => {
+                const isHidden = contentElement.classList.contains('hidden');
+                
+                if (isHidden) {
+                    contentElement.classList.remove('hidden');
+                    chevronElement.innerHTML = '<path d="m18 15-6-6-6 6"></path>';
+                } else {
+                    contentElement.classList.add('hidden');
+                    chevronElement.innerHTML = '<path d="m6 9 6 6 6-6"></path>';
+                }
+            });
+        });
+
+        // 탭 기능
+        const tabTriggers = document.querySelectorAll('.tab-trigger');
+        const tabContents = document.querySelectorAll('.tab-content');
+        
+        tabTriggers.forEach(trigger => {
+            trigger.addEventListener('click', () => {
+                // 모든 트리거에서 active 클래스 제거
+                tabTriggers.forEach(t => t.classList.remove('active'));
+                // 클릭된 트리거에 active 클래스 추가
+                trigger.classList.add('active');
+                
+                // 모든 콘텐츠 숨기기
+                tabContents.forEach(content => content.classList.remove('active'));
+                // 해당 콘텐츠 표시
+                const tabId = trigger.getAttribute('data-tab');
+                document.getElementById(tabId).classList.add('active');
+            });
+        });
+    </script>
+<script src="https://www.drv.tw/inc/wd.js?s=joonlab-html-file-hosting"></script></body>
+</html>
